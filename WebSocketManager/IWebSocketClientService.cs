@@ -5,7 +5,7 @@ namespace WebSocketManager
 {
     public interface IWebSocketClientService
     {
-        Task InitialSocketWithRetry(CancellationToken stoppingToken);
+        Task InitialSocketWithRetry(Endpoint options, CancellationToken stoppingToken);
 
         Task SendMessageToServerAsync(string message);
 

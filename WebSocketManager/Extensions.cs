@@ -1,8 +1,11 @@
-﻿using System;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 // ReSharper disable UnusedMethodReturnValue.Global : usage of return value is optional to the consuming app
 
@@ -68,7 +71,7 @@ namespace WebSocketManager
         {
             services.AddSingleton<IWebSocketReceivingMessageHandler, TMessageHandler>();
 
-            services.AddHostedService<WebSocketClientHostedService<TMessageHandler>>();
+            services.AddHostedService<WebSocketClientHostedService1<TMessageHandler>>();
 
             services.AddSingleton<ConnectionManager>();
             services.AddSingleton<IWebSocketClientService, WebSocketClientClientService<TMessageHandler>>();
@@ -76,18 +79,64 @@ namespace WebSocketManager
             services.Configure(options);
         }
 
-        public static void AddWebSocketClient<TMessageHandler>(this IServiceCollection services, IConfiguration configuration, string configurationSection)
+        public static void AddWebSocketClient<TMessageHandler>(this IServiceCollection services,
+            IConfiguration configuration, string configurationSection)
             where TMessageHandler : class, IWebSocketReceivingMessageHandler
         {
+
+            var serverConfiguration = configuration
+                .GetSection(configurationSection)
+                .Get<IEnumerable<Endpoint>>();
+
             services.AddSingleton<IWebSocketReceivingMessageHandler, TMessageHandler>();
 
-            services.AddHostedService<WebSocketClientHostedService<TMessageHandler>>();
+            AddHostedServicesForEachServerEndpoint<TMessageHandler>(services, serverConfiguration);
 
             services.AddSingleton<ConnectionManager>();
             services.AddSingleton<IWebSocketClientService, WebSocketClientClientService<TMessageHandler>>();
 
+            services.Configure<WebSocketClientConfiguration>(clientConfiguration =>
+                configuration.GetSection(configurationSection).Bind(clientConfiguration));
+        }
 
-            services.Configure<WebSocketClientConfiguration>(clientConfiguration => configuration.GetSection(configurationSection).Bind(clientConfiguration));
+        private static void AddHostedServicesForEachServerEndpoint<TMessageHandler>(IServiceCollection services, IEnumerable<Endpoint> serverConfiguration)
+            where TMessageHandler : class, IWebSocketReceivingMessageHandler
+        {
+
+            /*
+             * The current version of dotnet doesn't support AddHostedService more than once for the same type.
+             * https://github.com/dotnet/runtime/issues/38751
+             *
+             * When the issue fixed, the following funky code can be replaced by a simple for loop. Until then,
+             * we take limited number of hosts. 
+             */
+
+
+            // --- first endpoint ------------------------------------------------------------------------------
+            var connectingServers = serverConfiguration.ToList();
+
+            var clientConfiguration1 = connectingServers.FirstOrDefault();
+
+            if (clientConfiguration1 == null)
+                return;
+
+            services.AddHostedService(provider => new WebSocketClientHostedService1<TMessageHandler>(
+                clientConfiguration1,
+                provider.GetService<ILogger>(),
+                provider.GetService<IWebSocketClientService>()));
+
+            // --- second endpoint -----------------------------------------------------------------------------
+            var clientConfiguration2 = connectingServers.Skip(1).FirstOrDefault();
+
+            if (clientConfiguration2 == null)
+                return;
+
+            services.AddHostedService(provider => new WebSocketClientHostedService2<TMessageHandler>(
+                clientConfiguration2,
+                provider.GetService<ILogger>(),
+                provider.GetService<IWebSocketClientService>()));
+
+            // --- add third and more if required --------------------------------------------------------------
         }
     }
 }

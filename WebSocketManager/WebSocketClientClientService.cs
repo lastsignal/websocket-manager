@@ -1,10 +1,9 @@
+using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
-using Serilog;
 
 namespace WebSocketManager
 {
@@ -12,26 +11,22 @@ namespace WebSocketManager
         where TMessageHandler : class, IWebSocketReceivingMessageHandler
     {
         private readonly ILogger _logger;
-        private readonly IOptions<WebSocketClientConfiguration> _options;
 
         private readonly ConcurrentDictionary<Type, ClientWebSocket> _sockets = new ConcurrentDictionary<Type, ClientWebSocket>();
 
-        public WebSocketClientClientService(ConnectionManager webSocketConnectionManager, ILogger logger, IOptions<WebSocketClientConfiguration> options, IWebSocketReceivingMessageHandler webSocketReceivingMessageHandler):
+        public WebSocketClientClientService(ConnectionManager webSocketConnectionManager, ILogger logger, IWebSocketReceivingMessageHandler webSocketReceivingMessageHandler) :
             base(logger, webSocketReceivingMessageHandler)
         {
             _logger = logger.ForContext<WebSocketClientClientService<TMessageHandler>>();
-            _options = options;
             WebSocketConnectionManager = webSocketConnectionManager;
         }
 
-        public async Task InitialSocketWithRetry(CancellationToken stoppingToken)
+        public async Task InitialSocketWithRetry(Endpoint options, CancellationToken stoppingToken)
         {
-            if (_options?.Value.ServerEndpoint == null)
+            if (options?.ServerEndpoint == null)
             {
-                throw new System.Configuration.ConfigurationErrorsException("ServerEndpoint cannot be null");
+                throw new System.Configuration.ConfigurationErrorsException("ServerEndpoints cannot be null");
             }
-
-            var options = _options.Value;
 
             var retryAfter = TimeSpan.FromSeconds(options.RetryConnectInSeconds ?? 15);
 
@@ -75,7 +70,7 @@ namespace WebSocketManager
 
         public async Task<WebSocketClientConfiguration> GetConfiguration()
         {
-            return await Task.FromResult(_options.Value);
+            return await Task.FromResult(new WebSocketClientConfiguration());
         }
     }
 }
