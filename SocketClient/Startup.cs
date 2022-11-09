@@ -24,19 +24,15 @@ namespace SocketClient
 
 
             // >> Register WebSocketClient
-            services.AddWebSocketClient<WebSocketMessageHandler>(Configuration, "WebSocketServers");
-
-            /*
-             * Alternatively, you can register WebSocketClient using the options:
-             *
-
             services.AddWebSocketClient<WebSocketMessageHandler>(options =>
             {
-                options.ServerEndpoint = "wss://some-endpoints/ws";
+                options.ServerEndpoints = new[]
+                {
+                    "wss://localhost:5010/ws",
+                    "wss://localhost:5011/ws"
+                };
                 options.RetryConnectInSeconds = 15;
             });
-
-             */
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
