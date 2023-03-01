@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackageId>WebSocketManager.NetCore</PackageId>
-    <Version>4.0.0</Version>
+    <Version>4.0.1</Version>
     <Authors>Dan B. Daneshgar</Authors>
     <Company>Last Signal Corp</Company>
     <AssemblyName>WebSocketManager</AssemblyName>
