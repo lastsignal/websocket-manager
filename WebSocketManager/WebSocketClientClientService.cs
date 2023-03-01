@@ -63,12 +63,23 @@ namespace WebSocketManager
                 }
                 catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
                 {
-                    _logger.Warning("Connection Lost at Client. . Retrying after a while");
+                    _logger.Warning("Connection Lost at Client. Retrying after {RetryInSeconds} seconds", options.RetryConnectInSeconds);
+                    Thread.Sleep(retryAfter);
+                }
+                catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.NotAWebSocket)
+                {
+                    _logger.Warning("Connection Lost at Client. Retrying after {RetryInSeconds} seconds", options.RetryConnectInSeconds);
+                    Thread.Sleep(retryAfter);
+                }
+                catch (WebSocketException e)
+                {
+                    _logger.Warning(e, "An unhandled WebSocketException occurred. Retrying after {RetryInSeconds} seconds", options.RetryConnectInSeconds);
                     Thread.Sleep(retryAfter);
                 }
                 catch (Exception e)
                 {
                     _logger.Error(e, "Cannot connect");
+                    throw;
                 }
             }
         }
