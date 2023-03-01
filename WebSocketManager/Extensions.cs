@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable UnusedMethodReturnValue.Global : usage of return value is optional to the consuming app
@@ -74,20 +73,6 @@ namespace WebSocketManager
             services.AddSingleton<IWebSocketClientService, WebSocketClientClientService<TMessageHandler>>();
 
             services.Configure(options);
-        }
-
-        public static void AddWebSocketClient<TMessageHandler>(this IServiceCollection services, IConfiguration configuration, string configurationSection)
-            where TMessageHandler : class, IWebSocketReceivingMessageHandler
-        {
-            services.AddSingleton<IWebSocketReceivingMessageHandler, TMessageHandler>();
-
-            services.AddHostedService<WebSocketClientHostedService<TMessageHandler>>();
-
-            services.AddSingleton<ConnectionManager>();
-            services.AddSingleton<IWebSocketClientService, WebSocketClientClientService<TMessageHandler>>();
-
-
-            services.Configure<WebSocketClientConfiguration>(clientConfiguration => configuration.GetSection(configurationSection).Bind(clientConfiguration));
         }
     }
 }

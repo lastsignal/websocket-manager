@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,25 +27,32 @@ namespace WebSocketManager
 
         public async Task InitialSocketWithRetry(CancellationToken stoppingToken)
         {
-            if (_options?.Value.ServerEndpoint == null)
+            var endpoints = _options?.Value?.ServerEndpoints?.ToList();
+            if (endpoints == null || !endpoints.Any())
             {
-                throw new System.Configuration.ConfigurationErrorsException("ServerEndpoint cannot be null");
+                throw new System.Configuration.ConfigurationErrorsException("ServerEndpoints cannot be emapty");
             }
 
             var options = _options.Value;
 
             var retryAfter = TimeSpan.FromSeconds(options.RetryConnectInSeconds ?? 15);
 
+            await Task.WhenAll(endpoints
+                .Select(endpoint => EstablishConnection(endpoint, options, retryAfter, stoppingToken)));
+        }
+
+        private async Task EstablishConnection(string endpoint, WebSocketClientConfiguration options, TimeSpan retryAfter, CancellationToken stoppingToken)
+        { 
             while (!stoppingToken.IsCancellationRequested) // retry control while loop
             {
-                _logger.Information("Trying to connect to {Endpoint}", options.ServerEndpoint);
+                _logger.Information("Trying to connect to {Endpoint}", endpoint);
 
                 try
                 {
                     var socket = _sockets.AddOrUpdate(typeof(TMessageHandler), type => new ClientWebSocket(), (type, foundSocket) => new ClientWebSocket());
-                    await socket.ConnectAsync(new Uri(options.ServerEndpoint), stoppingToken);
+                    await socket.ConnectAsync(new Uri(endpoint), stoppingToken);
 
-                    Log.Information("I am Connected to {Endpoint}!", options.ServerEndpoint);
+                    Log.Information("I am Connected to {Endpoint}!", endpoint);
 
                     await InitializeSocket(socket, stoppingToken);
                 }
