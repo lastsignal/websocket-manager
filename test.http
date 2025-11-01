@@ -1,0 +1,22 @@
+@Client1 = https://localhost:5001
+@Server1 = https://localhost:5010
+
+### Client Status
+GET {{Client1}}/status
+
+### Client Sends the Tiem
+GET {{Client1}}/ping
+
+### Client Sends a message
+GET {{Client1}}/ping/a-message
+
+
+### Server Status
+GET {{Server1}}/status
+
+### Server Sends the Tiem
+GET {{Server1}}/ping
+
+### Server Sends a message
+GET {{Server1}}/ping/a-message
+

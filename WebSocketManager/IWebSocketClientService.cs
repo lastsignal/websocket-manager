@@ -1,14 +1,13 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WebSocketManager
+namespace WebSocketManager;
+
+public interface IWebSocketClientService
 {
-    public interface IWebSocketClientService
-    {
-        Task InitialSocketWithRetry(CancellationToken stoppingToken);
+    Task InitialSocketWithRetry(CancellationToken stoppingToken);
 
-        Task SendMessageToServerAsync(string message);
+    Task SendMessageToServerAsync(string message);
 
-        Task<WebSocketClientConfiguration> GetConfiguration();
-    }
+    Task<WebSocketClientConfiguration> GetConfiguration();
 }

@@ -6,48 +6,36 @@ using System.Globalization;
 using System.Threading.Tasks;
 using WebSocketManager;
 
-namespace SocketServer.Controllers
+namespace SocketServer.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class WebSocketsController(ILogger logger, IWebSocketServerService messageServerService, ConnectionManager connectionManager) : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class WebSocketsController : ControllerBase
+    [HttpGet("/status")]
+    public async Task<IActionResult> GetInfo()
     {
-        private readonly ILogger _logger;
-        private readonly IWebSocketServerService _messageServerService;
-        private readonly ConnectionManager _connectionManager;
+        logger.Information("app information: {MachineName}", Environment.MachineName);
+        var connections = connectionManager.GetAll();
 
-        public WebSocketsController(ILogger logger, IWebSocketServerService messageServerService, ConnectionManager connectionManager)
+        var result = new
         {
-            _logger = logger;
-            _messageServerService = messageServerService;
-            _connectionManager = connectionManager;
-        }
+            count = connections.Count,
+            connections
+        };
 
-        [HttpGet("/status")]
-        public async Task<IActionResult> GetInfo()
-        {
-            _logger.Information("app information: {MachineName}", Environment.MachineName);
-            var connections = _connectionManager.GetAll();
+        logger.Information("{Connections}", JsonConvert.SerializeObject(result));
 
-            var result = new
-            {
-                count = connections.Count,
-                connections
-            };
+        return Ok(await Task.FromResult(result));
+    }
 
-            _logger.Information("{Connections}", JsonConvert.SerializeObject(result));
+    [HttpGet("/ping/{message?}")]
+    public async Task Get(string message)
+    {
+        logger.Information("/ping called");
 
-            return Ok(await Task.FromResult(result));
-        }
+        message ??= DateTime.Now.ToString(CultureInfo.InvariantCulture);
 
-        [HttpGet("/ping/{message?}")]
-        public async Task Get(string message)
-        {
-            _logger.Information("/ping called");
-
-            message ??= DateTime.Now.ToString(CultureInfo.InvariantCulture);
-
-            await _messageServerService.SendMessageToAllClientsAsync(message);
-        }
+        await messageServerService.SendMessageToAllClientsAsync(message);
     }
 }

@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <PackageId>WebSocketManager.NetCore</PackageId>
-    <Version>4.0.1</Version>
+    <Version>5.0.0</Version>
     <Authors>Dan B. Daneshgar</Authors>
     <Company>Last Signal Corp</Company>
     <AssemblyName>WebSocketManager</AssemblyName>

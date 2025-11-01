@@ -1,36 +1,41 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using SocketClient;
 using System;
+using WebSocketManager;
 
-namespace SocketClient
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .MinimumLevel.Debug()
+    .WriteToConsole()
+    .CreateLogger();
+
+Log.Logger.Information("Client application started at: {MachineName}", Environment.MachineName);
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddSingleton(Log.Logger);
+
+// Register WebSocketClient
+builder.Services.AddWebSocketClient<WebSocketMessageHandler>(options =>
 {
-    // ReSharper disable once ClassNeverInstantiated.Global : Program is the entry point of the app
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            Log.Logger = new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .Enrich.WithMachineName()
-                .MinimumLevel.Debug()
-                .WriteToConsole()
-                .CreateLogger();
+    options.ServerEndpoints = [
+        "wss://localhost:5010/ws",
+        // in case more than one server is running
+        // "wss://localhost:5011/ws",
+        ];
+});
 
-            var host = CreateHostBuilder(args).Build();
+var app = builder.Build();
+app.UseRouting();
+app.UseAuthorization();
 
-            Log.Logger.Information("application started at: {MachineName}", Environment.MachineName);
+app.MapControllers();
 
-            host.Run();
-        }
+// Use WebSocketClient
+app.UseWebSocketClient();
 
-        private static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                    webBuilder.UseKestrel();
-                });
-
-    }
-}
+await app.RunAsync();

@@ -3,25 +3,15 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
-namespace WebSocketManager
+namespace WebSocketManager;
+
+public class WebSocketClientHostedService<TMessageHandler>(ILogger logger, IWebSocketClientService webSocketClientService) : BackgroundService
+    where TMessageHandler : IWebSocketReceivingMessageHandler
 {
-    public class WebSocketClientHostedService<TMessageHandler> : BackgroundService
-        where TMessageHandler : IWebSocketReceivingMessageHandler
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        private readonly ILogger _logger;
-        private readonly IWebSocketClientService _webSocketClientService;
+        logger.Information($"{nameof(WebSocketClientHostedService<TMessageHandler>)} started");
 
-        public WebSocketClientHostedService(ILogger logger, IWebSocketClientService webSocketClientService)
-        {
-            _logger = logger;
-            _webSocketClientService = webSocketClientService;
-        }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            _logger.Information($"{nameof(WebSocketClientHostedService<TMessageHandler>)} started");
-
-            await _webSocketClientService.InitialSocketWithRetry(stoppingToken);
-        }
+        await webSocketClientService.InitialSocketWithRetry(stoppingToken);
     }
 }
