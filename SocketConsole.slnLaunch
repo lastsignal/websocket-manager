@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Side by Side",
+    "Projects": [
+      {
+        "Path": "SocketClient\\SocketClient.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "SocketServer\\SocketServer.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

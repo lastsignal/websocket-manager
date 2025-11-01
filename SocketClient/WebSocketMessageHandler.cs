@@ -3,23 +3,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using WebSocketManager;
 
-namespace SocketClient
+namespace SocketClient;
+
+public class WebSocketMessageHandler(ILogger logger) : IWebSocketReceivingMessageHandler
 {
-    public class WebSocketMessageHandler : IWebSocketReceivingMessageHandler
+    public async Task HandleAsync(string message, CancellationToken stoppingToken)
     {
-        private readonly ILogger _logger;
+        if (message == "cache-reset")
+            logger.Information("I am the handler");
 
-        public WebSocketMessageHandler(ILogger logger)
-        {
-            _logger = logger;
-        }
-
-        public async Task HandleAsync(string message, CancellationToken stoppingToken)
-        {
-            if (message == "cache-reset")
-                _logger.Information("I am the handler");
-
-            await Task.CompletedTask;
-        }
+        await Task.CompletedTask;
     }
 }

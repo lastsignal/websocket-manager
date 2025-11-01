@@ -5,35 +5,26 @@ using System.Globalization;
 using System.Threading.Tasks;
 using WebSocketManager;
 
-namespace SocketClient.Controllers
+namespace SocketClient.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class WebSocketsController(ILogger logger, IWebSocketClientService webSocketClientService) : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class WebSocketsController : ControllerBase
+    [HttpGet("/status")]
+    public async Task<IActionResult> GetStatus()
     {
-        private readonly ILogger _logger;
-        private readonly IWebSocketClientService _webSocketClientService;
+        return Ok(await webSocketClientService.GetConfiguration());
+    }
 
-        public WebSocketsController(ILogger logger, IWebSocketClientService webSocketClientService)
-        {
-            _logger = logger;
-            _webSocketClientService = webSocketClientService;
-        }
+    [HttpGet("/ping/{message?}")]
+    public async Task Get(string message)
+    {
+        logger.Information("/ping called");
 
-        [HttpGet("/status")]
-        public async Task<IActionResult> GetStatus()
-        {
-            return Ok(await _webSocketClientService.GetConfiguration());
-        }
+        var port = HttpContext.Connection.LocalPort;
 
-        [HttpGet("/ping/{message?}")]
-        public async Task Get(string message)
-        {
-            _logger.Information("/ping called");
-
-            message ??= DateTime.Now.ToString(CultureInfo.InvariantCulture);
-            await _webSocketClientService.SendMessageToServerAsync($"I am {WebSocketManager.Extensions.GetMachineName()}");
-            await _webSocketClientService.SendMessageToServerAsync($"Sending {message}");
-        }
+        message ??= DateTime.Now.ToString(CultureInfo.InvariantCulture);
+        await webSocketClientService.SendMessageToServerAsync($"{message} from client at machine: '{WebSocketManager.Extensions.GetMachineName()}', port: {port}");
     }
 }

@@ -1,11 +1,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WebSocketManager
+namespace WebSocketManager;
+
+public interface IWebSocketReceivingMessageHandler
 {
-    public interface IWebSocketReceivingMessageHandler
-    {
-        // ReSharper disable UnusedParameter.Global : using the parameters is up to the consumer implementer
-        Task HandleAsync(string message, CancellationToken stoppingToken);
-    }
+    // ReSharper disable UnusedParameter.Global : using the parameters is up to the consumer implementer
+    Task HandleAsync(string message, CancellationToken stoppingToken);
 }

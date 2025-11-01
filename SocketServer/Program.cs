@@ -1,35 +1,35 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
+using WebSocketManager;
+using SocketServer;
 
-namespace SocketServer
-{
-    // ReSharper disable once ClassNeverInstantiated.Global : Program is the entry point of the app
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            Log.Logger = new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .Enrich.WithMachineName()
-                .MinimumLevel.Debug()
-                .WriteToConsole()
-                .CreateLogger();
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .MinimumLevel.Debug()
+    .WriteToConsole()
+    .CreateLogger();
 
-            var host = CreateHostBuilder(args).Build();
+Log.Logger.Information("Server application started at: {MachineName}", Environment.MachineName);
 
-            Log.Logger.Information("application started at: {MachineName}", Environment.MachineName);
+var builder = WebApplication.CreateBuilder(args);
 
-            host.Run();
-        }
+builder.Services.AddControllers();
+builder.Services.AddSingleton(Log.Logger);
 
-        private static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                    webBuilder.UseKestrel();
-                });
-    }
-}
+// Add WebSocketManager Server
+builder.Services.AddWebSocketServer<ServerSideWebSocketReceivingMessageHandler>();
+
+
+var app = builder.Build();
+app.UseRouting();
+app.UseAuthorization();
+
+// Use WebSocketManager Server; needs to be placed before UseEndpoints!
+app.UseWebSocketServer("/ws");
+
+app.MapControllers();
+
+await app.RunAsync();

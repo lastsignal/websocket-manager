@@ -1,11 +1,18 @@
 ﻿{
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Kestrel": {
+    "ClinetApp1": {
       "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "status",
+      "launchBrowser": false,
       "applicationUrl": "https://localhost:5001",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "ClinetApp2": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:5002",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
